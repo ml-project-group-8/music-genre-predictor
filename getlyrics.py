@@ -38,7 +38,22 @@ def get_lyrics(artist,song_title):
 colnames = ['Genre','ID','popularity','is_exp','name','danceability','energy','key','loudness',
 'mode','speechiness','acousticness','instrumentalness','liveness','valence','tempo','time_signature']
 
-data = pandas.read_csv('fetched.csv')
+data = pandas.read_csv('final.csv')
 colnames = list(data) #['Unnamed: 0', 'Genre', 'ID', 'popularity', 'is_exp', 'name', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'time_signature']
-print(data[['artist', 'name']])
-#write to csv
+# for x,y in (data[['artist', 'name']]):
+# print(data.iloc[0:,0:2]) 
+with open('final.csv','r') as csvinput:
+    with open('lyrics.csv', 'w') as csvoutput:
+        writer = csv.writer(csvoutput, lineterminator='\n')
+        reader = csv.reader(csvinput)
+
+        all = []
+        row = next(reader)
+            row.append(get_lyrics(x,y))
+            all.append(row)
+
+        for row in reader:
+            row.append(row[0])
+            all.append(row)
+
+        writer.writerows(all)
