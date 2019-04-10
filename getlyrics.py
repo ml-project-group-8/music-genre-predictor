@@ -39,21 +39,15 @@ colnames = ['Genre','ID','popularity','is_exp','name','danceability','energy','k
 'mode','speechiness','acousticness','instrumentalness','liveness','valence','tempo','time_signature']
 
 data = pandas.read_csv('final.csv')
-colnames = list(data) #['Unnamed: 0', 'Genre', 'ID', 'popularity', 'is_exp', 'name', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'time_signature']
-# for x,y in (data[['artist', 'name']]):
-# print(data.iloc[0:,0:2]) 
-with open('final.csv','r') as csvinput:
-    with open('lyrics.csv', 'w') as csvoutput:
-        writer = csv.writer(csvoutput, lineterminator='\n')
-        reader = csv.reader(csvinput)
+colnames = list(data) 
 
-        all = []
-        row = next(reader)
-            row.append(get_lyrics(x,y))
-            all.append(row)
+df = pandas.read_csv("final.csv")
+all_lyrics = []
+count = 0
+for x,y in zip(list(data['artist']),list(data['name'])):
+    all_lyrics.append(get_lyrics(x,y))
+    print(count)
+    count += 1
 
-        for row in reader:
-            row.append(row[0])
-            all.append(row)
-
-        writer.writerows(all)
+df['lyrics'] = all_lyrics
+df.to_csv('final.csv')
