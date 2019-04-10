@@ -54,50 +54,62 @@ def main():
         "Authorization": "Bearer {}".format(token),
     }
     for cat in categories:
-        print("Getting playlists for {}".format(cat))
-        cat_url = category_url.format(cat)
+        cat_count = 0
+        cat_data  = {
+            "market": "US",
+            "limit": 50, # This is a max we gotta iterate to get them all
+            "offset": 0, # Initially 0, we udate this until no more playlist
+        }
+        weGood = False
+        while cat_count < 2000 and not weGood:
+            print("Getting playlists for {}. Count: {}".format(cat,cat_count))
 
-        if time.time() - start > 3598:
-            time.sleep(5)
-            start = time.time()
-            token = get_token()
-
-        cat_response = requests.get(cat_url, headers=headers, params=cat_data)
-
-        cat_playlists = cat_response.json()
-
-        if "error" in cat_playlists:
-            print("Error, {}".format(cat_playlists["error"]))
-            return
-
-        for playlist in cat_playlists["playlists"]["items"]:
-            curr_playlist = playlist_url.format(playlist["id"])
+            cat_url = category_url.format(cat)
 
             if time.time() - start > 3598:
                 time.sleep(5)
                 start = time.time()
                 token = get_token()
 
-            pl_response = requests.get(curr_playlist,headers=headers,params=play_data)
-            pl_result = pl_response.json()
+            cat_response = requests.get(cat_url, headers=headers, params=cat_data)
 
-            if "error" in pl_result:
-                print("Error, {}".format(pl_result))
+            cat_playlists = cat_response.json()
+            print(cat_playlists)
+            time.sleep(10)
+            if "error" in cat_playlists:
+                print("Error, {}".format(cat_playlists["error"]))
+                return
 
-            for song in pl_result.get("items"):
-                track_data = song.get("track")
+            for playlist in cat_playlists["playlists"]["items"]:
+                curr_playlist = playlist_url.format(playlist["id"])
 
-                if not track_data:
-                    continue
+                if time.time() - start > 3598:
+                    time.sleep(5)
+                    start = time.time()
+                    token = get_token()
 
-                track_id   = track_data["id"]           # Id code for track
-                track_name = track_data["name"]         # Title of the song
-                track_pop  = track_data["popularity"]   # How popular a song is
-                track_exp  = track_data["explicit"]     # Bool of cussing or nah
-                track_gen  = cat[::]                    # Category
-                track_art = track_data["artists"][0]["name"] # First artist on track
+                pl_response = requests.get(curr_playlist,headers=headers,params=play_data)
+                pl_result = pl_response.json()
 
-                tracks.append( [track_gen,track_id, track_pop, track_exp, track_name,track_art] )
+                if "error" in pl_result:
+                    print("Error, {}".format(pl_result))
+
+                for song in pl_result.get("items"):
+                    cat_count += 1
+                    track_data = song.get("track")
+
+                    if not track_data:
+                        continue
+
+                    track_id   = track_data["id"]           # Id code for track
+                    track_name = track_data["name"]         # Title of the song
+                    track_pop  = track_data["popularity"]   # How popular a song is
+                    track_exp  = track_data["explicit"]     # Bool of cussing or nah
+                    track_gen  = cat[::]                    # Category
+                    track_art = track_data["artists"][0]["name"] # First artist on track
+
+                    tracks.append( [track_gen,track_id, track_pop, track_exp, track_name,track_art] )
+            cat_data["offset"] += 50
 
     print("Got IDs for {} songs".format(len(tracks)))
 
