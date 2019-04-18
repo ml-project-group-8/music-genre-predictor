@@ -35,9 +35,10 @@ def main():
 
     playlist_url = "https://api.spotify.com/v1/playlists/{}/tracks"
     category_url = "https://api.spotify.com/v1/browse/categories/{}/playlists"
-
+    
+    pop_url = "https://api.spotify.com/v1/browse/categories/pop/playlists?country=US&offset=0&limit=50"
     cat_data  = {
-        "market": "US",
+        "country": "US",
         "limit": 50, # This is a max we gotta iterate to get them all
         "offset": 0, # Initially 0, we udate this until no more playlist
     }
@@ -46,7 +47,7 @@ def main():
         "limit": 100, # This is a max we gotta iterate to get them all
         "offset": 0, # Initially 0, we udate this until no more playlist
     }
-    categories = ["rnb","hiphop","country","pop","classical","edm_dance","rock"]
+    categories = ["pop"]#["rnb","hiphop","country","pop","classical","edm_dance","rock"]
     start   = time.time()
     token   = get_token()
 
@@ -64,14 +65,14 @@ def main():
         while cat_count < 2000 and not weGood:
             print("Getting playlists for {}. Count: {}".format(cat,cat_count))
 
-            cat_url = category_url.format(cat)
+            cat_url = pop_url #category_url.format(cat)
 
             if time.time() - start > 3598:
                 time.sleep(5)
                 start = time.time()
                 token = get_token()
 
-            cat_response = requests.get(cat_url, headers=headers, params=cat_data)
+            cat_response = requests.get(cat_url, headers=headers)#, params=cat_data)
 
             cat_playlists = cat_response.json()
             print(cat_playlists)
@@ -158,7 +159,7 @@ def main():
         features.append(curr)
         index+= 1
     df = pd.DataFrame(features,columns=["Genre","ID","popularity","is_exp","name","artist"]+feat_names)
-    df.to_csv("final.csv")
+    df.to_csv("pop.csv")
 
 
 
