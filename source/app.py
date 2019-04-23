@@ -1,9 +1,10 @@
 from flask import Flask, render_template, redirect, send_from_directory
 from flask import jsonify, request
 import os
-
+from models import Models
 from get_lyrics import grab_lyrics,grab_features
 
+ml_model = Models()
 app = Flask(__name__)
 
 @app.route("/")
@@ -12,7 +13,6 @@ def index():
 
 @app.route("/songdata",methods=["POST"])
 def songdata():
-    print(request.values)
     query = request.form.get("q", "", type=str)
     if query == "":
         return jsonify({"error":"invalid query"})
@@ -24,7 +24,12 @@ def songdata():
     if feats[0] == False:
         return jsonify({"error":"unable to grab features"})
 
-
-    return jsonify({"lyrics":lyrical_data[2],"features":feats[-1]})
+    pred = ml_model.predict(feats[-1])
+    ret = {
+        "lyrics":lyrical_data[2],
+        "features":feats[-1],
+        "predictions": pred
+    }
+    return jsonify(ret)
 if __name__ == "__main__":
     app.run(debug=True)
