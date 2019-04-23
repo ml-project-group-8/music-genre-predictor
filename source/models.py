@@ -153,5 +153,12 @@ class Models:
         ret = {}
         for model in self.models:
             res = list(self.models[model].predict(scaled))
-            ret[model] = [x.title() for x in res]
+            res = [x.title() for x in res][0]
+            if res == "Edm_Dance":
+                res = "EDM"
+            if res == "Hiphop":
+                res = "Hip-Hop"
+            if res == "Rnb":
+                res = "R&B"
+            ret[model] = res
         return ret
