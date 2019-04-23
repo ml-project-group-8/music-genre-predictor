@@ -94,6 +94,7 @@ def grab_lyrics(query):
     soup = bs(response.text, "html.parser")
     lyrics = soup.find("p")
 
+
     if lyrics == None:
         return True, "Success", ""
 
@@ -101,7 +102,7 @@ def grab_lyrics(query):
     lyrics = re.sub("[\(\[].*?[\)\]]", "", lyrics)
     lyrics = lyrics.replace("\n"," ")
     lyrics = lyrics.replace("\t"," ")
-
+    lyrics = lyrics.strip()
     return True, "Success", lyrics
 
 def grab_features(query):
@@ -150,7 +151,7 @@ def grab_features(query):
 
     ft_response = requests.get(track_url,headers=headers)
     ft_result = ft_response.json()
-    print(ft_result)
+
     for f in feat_names:
         v = ft_result.get(f)
         if v != None:

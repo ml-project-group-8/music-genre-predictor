@@ -6,6 +6,10 @@
       <meta charset="utf-8">
       <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
       <style>
+        html,body {
+          padding: 0;
+          margin:0;
+        }
         pre {
               overflow-x: auto;
               white-space: pre-wrap;
@@ -14,13 +18,42 @@
               white-space: -o-pre-wrap;
               word-wrap: break-word;
          }
+         #overlay {
+           display: none;
+           position: fixed;
+           width: 100%;
+           height: 100%;
+           background: rgba(0,0,0,.5) url({{ url_for('static',filename='pacman.svg') }}) center center no-repeat;
+           /*  */
+         }
+         h2 {
+           text-align: center;
+           color: white;
+         }
       </style>
   </head>
   <body>
     <div id="searchApp">
+        <div id="overlay">
+          <h2>Please be patient...</h2>
+        </div>
         <input  v-on:keyup.enter="searchSong" v-model="query" type="text"
                 placeholder="Search a Song" id="search" name="search">
         <button v-on:click="searchSong">Submit</button>
+        <div id="resultCont">
+          <h3 v-if="Object.keys(features).length">Features</h3>
+          <p v-for="(val, key) in features">
+            <strong>[[key]]</strong> : [[val]]
+          </p>
+          <h3 v-if="lyrics">Lyrics</h3>
+          <p>
+            [[lyrics]]
+          </p>
+          <h3 v-if="Object.keys(preds).length">Predictions</h3>
+          <p v-for="(val, key) in preds">
+            <strong>[[key]]</strong> : [[val]]
+          </p>
+        </div>
         <pre id="results" ref="results">
 
         </pre>
@@ -39,15 +72,23 @@
         el: '#searchApp',
         data: {
           query: "",
+          features: {},
+          lyrics: "",
+          preds: {},
         },
         methods: {
           searchSong: function(evt) {
+              document.getElementById("overlay").style.display = "initial";
               var xhr = new XMLHttpRequest();
               var self = this;
+              self.features = [];
+              self.lyrics   = "";
+              self.preds    = {};
               xhr.open("POST","/songdata",true);
               xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
               xhr.onreadystatechange = function() {
+                document.getElementById("overlay").style.display = "none";
                 if (this.readyState === XMLHttpRequest.DONE && this.status ===
                     200) {
                     var data = JSON.parse(xhr.responseText);
@@ -56,10 +97,13 @@
                       document.getElementById("results").innerHTML = "Error!"
                       return;
                     }
-                    document.getElementById("results").innerHTML = JSON.stringify(data,null,4);
+                    self.features = data["features"];
+                    self.lyrics   = data["lyrics"];
+                    self.preds    = data["predictions"];
                 }
               }
               xhr.send("q="+this.query);
+
           }
         },
         delimiters: ['[[',']]']

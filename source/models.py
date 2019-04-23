@@ -152,5 +152,5 @@ class Models:
 
         ret = {}
         for model in self.models:
-            ret[model] = list(self.models[model].predict(scaled))[0]
+            ret[model] = list(self.models[model].predict(scaled))[0].title()
         return ret
