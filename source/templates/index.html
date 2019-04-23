@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <title>Music Classifier</title>
+      <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+      <meta charset="utf-8">
+      <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+      <style>
+        pre {
+              overflow-x: auto;
+              white-space: pre-wrap;
+              white-space: -moz-pre-wrap;
+              white-space: -pre-wrap;
+              white-space: -o-pre-wrap;
+              word-wrap: break-word;
+         }
+      </style>
+  </head>
+  <body>
+    <div id="searchApp">
+        <input  v-on:keyup.enter="searchSong" v-model="query" type="text"
+                placeholder="Search a Song" id="search" name="search">
+        <button v-on:click="searchSong">Submit</button>
+        <pre id="results" ref="results">
+
+        </pre>
+    </div>
+    <div id="app">
+    </div>
+    <script>
+      var app = new Vue({
+        el: '#app',
+        data: {
+
+        },
+        delimiters: ['[[',']]']
+      });
+      var searchApp = new Vue({
+        el: '#searchApp',
+        data: {
+          query: "",
+        },
+        methods: {
+          searchSong: function(evt) {
+              var xhr = new XMLHttpRequest();
+              var self = this;
+              xhr.open("POST","/songdata",true);
+              xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+              xhr.onreadystatechange = function() {
+                if (this.readyState === XMLHttpRequest.DONE && this.status ===
+                    200) {
+                    var data = JSON.parse(xhr.responseText);
+
+                    if (data["error"] !== undefined) {
+                      document.getElementById("results").innerHTML = "Error!"
+                      return;
+                    }
+                    document.getElementById("results").innerHTML = JSON.stringify(data,null,4);
+                }
+              }
+              xhr.send("q="+this.query);
+          }
+        },
+        delimiters: ['[[',']]']
+      });
+    </script>
+  </body>
+</html>
