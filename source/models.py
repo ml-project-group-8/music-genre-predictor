@@ -14,6 +14,7 @@ import numpy as np
 from sklearn.dummy import DummyClassifier
 from sklearn import tree
 from sklearn.multiclass import OneVsOneClassifier
+from sklearn.svm import SVC
 import warnings; warnings.simplefilter('ignore')
 
 def cv_performance(clf, X, y, kf, metrics=["accuracy"]) :
@@ -119,6 +120,13 @@ class Models:
         DTree = tree.DecisionTreeClassifier(criterion="entropy", max_depth=opt_max_depth, min_samples_leaf=opt_min_samples)
         DTree.fit(X_train,y_train)
 
+        # SVM
+        lin_svm = SVC(10.3, kernel='linear')
+        lin_svm.fit(X_train, y_train)
+
+        rbf_svm = SVC(1, kernel='rbf', gamma=0.4, verbose=True)
+        rbf_svm.fit(X_train, y_train)
+
         # Dummy
         dummy = DummyClassifier(strategy='stratified')
         dummy.fit(X_train,y_train)
@@ -140,6 +148,8 @@ class Models:
             "KNN": knn,
             "Logistic": logclf,
             "DesicionTree": DTree,
+            "SVM-Linear": lin_svm,
+            "SVM-rbf": rbf_svm,
             "Dummy": dummy
         }
     def scale(self,newx):
