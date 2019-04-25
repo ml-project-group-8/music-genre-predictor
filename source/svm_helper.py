@@ -183,6 +183,7 @@ def select_param_rbf(X, y, kf, metrics=["accuracy"], plot=False) :
     # create grid of hyperparameters
     # hint: use a small 2x2 grid of hyperparameters for debugging
     C_range = 10.0 ** np.arange(-3, 3)          # dummy, okay to change
+    gamma_range = float(X.shape[0]) ** np.arange(-4, 2)    # dummy, okay to change    
     gamma_range = [0.25, 0.5, 0.75, 1, 1.5, 2, 5]    # dummy, okay to change
     #gamma_range = [0.1 * i for i in range(1,31)]
     scores = np.empty((len(metrics), len(C_range), len(gamma_range)))
@@ -366,3 +367,7 @@ def plot_results(metrics, classifiers, *args):
         autolabel(rects)
     
     plt.show()
+
+######################################################################
+# functions -- 
+######################################################################
