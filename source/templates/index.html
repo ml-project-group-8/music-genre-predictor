@@ -73,15 +73,27 @@
               <!-- <p v-for="(val, key) in features">
                 <strong>[[key]]</strong> : [[val]]
               </p> -->
-            </table>
+            </table class="table">
             <h3 v-if="lyrics">Lyrics</h3>
             <p>
               [[lyrics]]
             </p>
-            <h3 v-if="Object.keys(preds).length">Predictions</h3>
-            <p v-for="(val, key) in preds">
-              <strong>[[key]]</strong> : [[val]]
-            </p>
+            <table class="table">
+              <thead v-if="Object.keys(preds).length">
+                <th>Classifier</th>
+                <th>Result</th>
+              </thead>
+            <tbody>
+              <tr v-for="(val,key) in preds">
+                <td>
+                  [[key]]
+                </td>
+                <td>
+                  [[val]]
+                </td>
+              </tr>
+            </tbody>
+            </table class="table">
           </div>
           <pre id="results" ref="results">
     
