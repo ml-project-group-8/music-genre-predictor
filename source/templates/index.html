@@ -189,9 +189,11 @@
         </form>
         <div id="resultCont">
           <h3 v-if="Object.keys(features).length">Features</h3>
+          <table>
           <p v-for="(val, key) in features">
             <strong>[[key]]</strong> : [[val]]
           </p>
+        </table>
           <h3 v-if="lyrics">Lyrics</h3>
           <p>
             [[lyrics]]
