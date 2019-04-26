@@ -1,5 +1,5 @@
 from flask import Flask, render_template, redirect, send_from_directory
-from flask import jsonify, request
+from flask import jsonify, request, send_file
 import os
 from models import Models
 from get_lyrics import grab_lyrics,grab_features
@@ -31,5 +31,9 @@ def songdata():
         "predictions": pred
     }
     return jsonify(ret)
+
+@app.route("/loading")
+def loading():
+    return send_file("pacman.gif",mimetype="image/gif")
 if __name__ == "__main__":
     app.run(debug=True)

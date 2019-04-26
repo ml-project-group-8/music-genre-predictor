@@ -13,7 +13,8 @@ from sklearn.model_selection import StratifiedKFold
 import numpy as np
 from sklearn.dummy import DummyClassifier
 from sklearn import tree
-
+from sklearn.multiclass import OneVsOneClassifier
+from sklearn.svm import SVC
 import warnings; warnings.simplefilter('ignore')
 
 def cv_performance(clf, X, y, kf, metrics=["accuracy"]) :
@@ -82,7 +83,7 @@ class Models:
     def __init__(self):
 
         df     = pd.read_csv("data/lyrical_genius.csv")
-        df = df[((df["Genre"] == "pop") | (df["Genre"] ==  "country"))]
+        df = df[df["Genre"] != "pop" ]
         df = df.drop(columns="Unnamed: 0")
         df = df.drop_duplicates(subset=["Name","Artist"],keep=False)
 
@@ -97,7 +98,7 @@ class Models:
         X_train, X_test, y_train, y_test = train_test_split(scaled_X,y, test_size=.2, random_state=1234, stratify=y)
 
         # KNN
-        knn = KNeighborsClassifier()
+        knn = OneVsOneClassifier(KNeighborsClassifier())
         #create a dictionary of all values we want to test for n_neighbors
         param_grid = {'n_neighbors': np.arange(1,25)}
         #use gridsearch to test all values for n_neighbors
@@ -106,7 +107,7 @@ class Models:
         knn.fit(X_train, y_train)
 
         # Logistic
-        logclf = LogisticRegression(solver="lbfgs", multi_class="ovr")
+        logclf = OneVsOneClassifier(LogisticRegression(solver="lbfgs", multi_class="ovr"))
         logclf.fit(X_train,y_train)
 
 
@@ -118,6 +119,13 @@ class Models:
         # train classifier
         DTree = tree.DecisionTreeClassifier(criterion="entropy", max_depth=opt_max_depth, min_samples_leaf=opt_min_samples)
         DTree.fit(X_train,y_train)
+
+        # SVM
+        lin_svm = SVC(10.3, kernel='linear')
+        lin_svm.fit(X_train, y_train)
+
+        rbf_svm = SVC(1, kernel='rbf', gamma=0.4, verbose=True)
+        rbf_svm.fit(X_train, y_train)
 
         # Dummy
         dummy = DummyClassifier(strategy='stratified')
@@ -140,6 +148,8 @@ class Models:
             "KNN": knn,
             "Logistic": logclf,
             "DesicionTree": DTree,
+            "SVM-Linear": lin_svm,
+            "SVM-rbf": rbf_svm,
             "Dummy": dummy
         }
     def scale(self,newx):
@@ -152,5 +162,13 @@ class Models:
 
         ret = {}
         for model in self.models:
-            ret[model] = list(self.models[model].predict(scaled))[0]
+            res = list(self.models[model].predict(scaled))
+            res = [x.title() for x in res][0]
+            if res == "Edm_Dance":
+                res = "EDM"
+            if res == "Hiphop":
+                res = "Hip-Hop"
+            if res == "Rnb":
+                res = "R&B"
+            ret[model] = res
         return ret
