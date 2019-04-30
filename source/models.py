@@ -15,6 +15,9 @@ from sklearn.dummy import DummyClassifier
 from sklearn import tree
 from sklearn.multiclass import OneVsOneClassifier
 from sklearn.svm import SVC
+
+from sklearn.externals import joblib
+
 import warnings; warnings.simplefilter('ignore')
 
 def cv_performance(clf, X, y, kf, metrics=["accuracy"]) :
@@ -83,10 +86,39 @@ class Models:
     def __init__(self):
 
         df     = pd.read_csv("data/lyrical_genius.csv")
-        df = df[df["Genre"] != "pop" ]
+
+        # Remove pop songs, they are all over the place and hurt classification
+        df = df[(df["Genre"] != "pop")]
+
+        # Remove some irrelevant columns
         df = df.drop(columns="Unnamed: 0")
+        df = df.drop(columns="Unnamed: 0.1")
+
+        # We go ahead and remove ALL duplicates
         df = df.drop_duplicates(subset=["Name","Artist"],keep=False)
 
+        # Give each genre a new cool color
+        genres = df["Genre"].unique()
+        unique_colors = [
+            '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080'
+        ]
+        colors = {}
+        i = 0
+        for genre in genres:
+            colors[genre] = unique_colors[i]
+            i+=1
+
+        # Upsample the amount of occurances of values that don't appear very often
+        # df = df.append(df[((df["Genre"] != "country") & (df["Genre"] != "edm_dance"))])
+        extras    = df.copy()
+        counts    = df["Genre"].value_counts()
+        max_count = max(df["Genre"].value_counts())
+        for genre in genres:
+            needed = max_count - counts[genre]
+            extras = extras.append(df[df["Genre"]==genre].sample(n=needed,replace=True))
+        df = extras
+        counts    = df["Genre"].value_counts()
+        colors_list = [colors[genre] for genre in genres]
         x_cols    = ["Is_Exp","Danceability","Energy","Key","Loudness","Mode","Speechiness","Acousticness","Instrumentalness","Liveness","Valence","Tempo","Time_Signature"]
         y_cols    = ["Genre"]
         meta_cols = ["Id","Popularity","Name","Artist"]
@@ -98,38 +130,23 @@ class Models:
         X_train, X_test, y_train, y_test = train_test_split(scaled_X,y, test_size=.2, random_state=1234, stratify=y)
 
         # KNN
-        knn = OneVsOneClassifier(KNeighborsClassifier())
-        #create a dictionary of all values we want to test for n_neighbors
-        param_grid = {'n_neighbors': np.arange(1,25)}
-        #use gridsearch to test all values for n_neighbors
-        knn_gscv = GridSearchCV(knn, param_grid, cv=5)
-        #fit model to data
-        knn.fit(X_train, y_train)
+        knn = joblib.load("knn.pkl")
 
         # Logistic
-        logclf = OneVsOneClassifier(LogisticRegression(solver="lbfgs", multi_class="ovr"))
-        logclf.fit(X_train,y_train)
-
-
-        # DTree
-        # optimize parameters with cross-validation
-        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=1234)
-        opt_max_depth, opt_min_samples = select_params(X_train, y_train, skf)[0]
+        logclf = joblib.load("logistic.pkl")
 
         # train classifier
-        DTree = tree.DecisionTreeClassifier(criterion="entropy", max_depth=opt_max_depth, min_samples_leaf=opt_min_samples)
-        DTree.fit(X_train,y_train)
+        DTree = joblib.load("dtree.pkl")
 
         # SVM
         lin_svm = SVC(10.3, kernel='linear')
-        lin_svm.fit(X_train, y_train)
+        lin_svm.fit(X_train,y_train)
 
-        rbf_svm = SVC(1, kernel='rbf', gamma=0.4, verbose=True)
+        rbf_svm = SVC(100, kernel='rbf', gamma=0.005, verbose=True)
         rbf_svm.fit(X_train, y_train)
-
+        
         # Dummy
-        dummy = DummyClassifier(strategy='stratified')
-        dummy.fit(X_train,y_train)
+        dummy = joblib.load("dummy.pkl")
 
         self.scaler = scaler
         self.lyrics = df["Lyrics"]

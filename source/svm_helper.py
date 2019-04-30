@@ -1,5 +1,3 @@
-from string import punctuation
-
 # numpy libraries
 import numpy as np
 
@@ -7,11 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # scikit-learn libraries
-from sklearn.dummy import DummyClassifier
 from sklearn.svm import SVC
 from sklearn.model_selection import StratifiedKFold
 from sklearn import metrics
-from sklearn.utils import shuffle
 
 ######################################################################
 # functions -- evaluation
@@ -103,7 +99,6 @@ def cv_performance(clf, X, y, kf, metrics=["accuracy"]) :
             
     return scores.mean(axis=1) # average across columns
 
-
 def select_param_linear(X, y, kf, metrics=["accuracy"], plot=True) :
     """
     Sweeps different settings for the hyperparameter of a linear-kernel SVM,
@@ -130,7 +125,6 @@ def select_param_linear(X, y, kf, metrics=["accuracy"], plot=True) :
 
     # compute CV scores using cv_performance(...)
     for row, C in enumerate(C_range):
-        print("C: ", C)
         scores[row] = cv_performance(SVC(C, kernel='linear'), X, y,
                              StratifiedKFold(n_splits=5), metrics)
 
@@ -141,7 +135,7 @@ def select_param_linear(X, y, kf, metrics=["accuracy"], plot=True) :
             if score > best_params[j][0]:
                 best_params[j] = score, C_range[i]
                 
-    # best_params = [tup[1] for tup in best_params]
+    best_params = [tup[1] for tup in best_params]
     
     # plot
     if plot:
@@ -184,7 +178,7 @@ def select_param_rbf(X, y, kf, metrics=["accuracy"], plot=False) :
     # hint: use a small 2x2 grid of hyperparameters for debugging
     C_range = 10.0 ** np.arange(-3, 3)          # dummy, okay to change
     gamma_range = float(X.shape[0]) ** np.arange(-4, 2)    # dummy, okay to change    
-    gamma_range = [0.25, 0.5, 0.75, 1, 1.5, 2, 5]    # dummy, okay to change
+    #gamma_range = [0.25, 0.5, 0.75, 1, 1.5, 2, 5]    # dummy, okay to change
     #gamma_range = [0.1 * i for i in range(1,31)]
     scores = np.empty((len(metrics), len(C_range), len(gamma_range)))
 
@@ -192,11 +186,12 @@ def select_param_rbf(X, y, kf, metrics=["accuracy"], plot=False) :
     # get best hyperparameters
     for i, c_value in enumerate(C_range):
         for j, g_value in enumerate(gamma_range):
-            print("C: ", c_value, "G: ", g_value)
             cv_perform =  cv_performance(SVC(c_value, kernel='rbf', gamma=g_value), X, y,
                                          StratifiedKFold(n_splits=5), metrics)
             for m, metric_score in enumerate(cv_perform):
                 scores[m][i][j] = metric_score
+
+        # plots graph for C value
         if plot:
             plt.figure()
             ax = plt.gca()
@@ -220,58 +215,9 @@ def select_param_rbf(X, y, kf, metrics=["accuracy"], plot=False) :
                 if metric_scores[c][g] > best_params[m][0]:
                     best_params[m] = metric_scores[c][g], c_values, g_values
 
-    # best_params = [(tup[1], tup[2]) for tup in best_params]
+    best_params = [(tup[1], tup[2]) for tup in best_params]
     
     return best_params
-
-
-def performance_CI(clf, X, y, metric="accuracy") :
-    """
-    Estimates the performance of the classifier using the 95% CI.
-    
-    Parameters
-    --------------------
-        clf          -- classifier (instance of SVC or DummyClassifier)
-                          [already fit to data]
-        X            -- numpy array of shape (n,d), feature vectors of test set
-                          n = number of examples
-                          d = number of features
-        y            -- numpy array of shape (n,), binary labels {1,-1} of test set
-        metric       -- string, option used to select performance measure
-    
-    Returns
-    --------------------
-        score        -- float, classifier performance
-        lower        -- float, lower limit of confidence interval
-        upper        -- float, upper limit of confidence interval
-    """
-    
-    try :
-        y_pred = clf.decision_function(X)
-    except :  # for dummy classifiers
-        y_pred = clf.predict(X)
-    score = performance(y, y_pred, metric)
-    
-    ### ========== TODO : START ========== ###
-    # part 5c: use bootstrapping to compute 95% confidence interval
-    # hint: use np.random.randint(...) to sample
-
-    n, d = X.shape
-    t_performances = []
-    t = 1000
-    for i in range(t):
-        indices = np.random.randint(0, n, size=n)
-        X_sample = X[indices]
-        y_sample = y[indices]
-        sample_perfor = performance(y_sample, clf.predict(X), metric)
-        t_performances.append(sample_perfor)
-    t_performances.sort()
-    score = 1.0 * sum(t_performances)/t
-    low_ = (t_performances[int(t*0.025)] + t_performances[int(t*0.025)-1])/2
-    high_ = (t_performances[int(t*0.975)] + t_performances[int(t*0.975)-1])/2
-    return score, low_, high_
-    ### ========== TODO : END ========== ###
-
 
 ######################################################################
 # functions -- plotting
@@ -368,6 +314,3 @@ def plot_results(metrics, classifiers, *args):
     
     plt.show()
 
-######################################################################
-# functions -- 
-######################################################################
